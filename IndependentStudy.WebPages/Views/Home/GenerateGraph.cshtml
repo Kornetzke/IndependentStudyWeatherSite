@@ -1,0 +1,217 @@
+﻿@model IndependentStudy.WebPages.Models.HistoricalDataResponse
+@{
+
+    ViewBag.Title = "GenerateGraph";
+
+}
+
+@{
+
+    var categoryList = Model.HistoricalTemperatures;
+    string categoryString = "";
+    var temperatureDataString = "";
+    var electricityDataString = "";
+    var steamDataString = "";
+    var waterDataString = "";
+    var buildingNameString = Model.BuildingName;
+    var badValue = -9999;
+    //This is a mess
+    foreach (var category in categoryList)
+    {
+        if (categoryString.Length > 0)
+        {
+            categoryString += ",'" + category.Key.ToShortDateString() + "'";
+            temperatureDataString += "," + category.Value.MeanTemperature + "";
+
+            long electricValue = badValue;
+            Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Electricity).FirstOrDefault()?.DateValues.TryGetValue(category.Key, out electricValue);
+            electricityDataString += (electricValue == badValue ? ",null" : ","+electricValue.ToString());
+
+            long steamValue = badValue;
+            Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Steam).FirstOrDefault()?.DateValues.TryGetValue(category.Key, out steamValue);
+            steamDataString += (steamValue == badValue ? ",null" : "," + steamValue.ToString());
+
+            long waterValue = badValue;
+            Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Water).FirstOrDefault()?.DateValues.TryGetValue(category.Key, out waterValue);
+            waterDataString += (waterValue == badValue ? ",null" : "," + waterValue.ToString());
+        }
+        else
+        {
+            categoryString += "'" + category.Key.ToShortDateString() + "'";
+            temperatureDataString += "" + category.Value.MeanTemperature + "";
+
+            long electricValue = badValue;
+            Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Electricity).FirstOrDefault()?.DateValues.TryGetValue(category.Key, out electricValue);
+            electricityDataString += (electricValue == badValue ? "null" : electricValue.ToString());
+
+            long steamValue = badValue;
+            Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Steam).FirstOrDefault()?.DateValues.TryGetValue(category.Key, out steamValue);
+            steamDataString += (steamValue == badValue ? "null" : steamValue.ToString());
+
+            long waterValue = badValue;
+            Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Water).FirstOrDefault()?.DateValues.TryGetValue(category.Key, out waterValue);
+            waterDataString += (waterValue == badValue ? "null" : waterValue.ToString());
+
+        }
+    }
+    categoryString = "[" + categoryString + "]";
+    temperatureDataString = "[" + temperatureDataString + "]";
+    electricityDataString = "[" + electricityDataString + "]";
+    steamDataString = "[" + steamDataString + "]";
+    waterDataString = "[" + waterDataString + "]";
+
+
+
+    var displayElectricMeter = Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Electricity).Count() > 0;
+
+    var displaySteamMeter = Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Steam).Count() > 0;
+
+    var displayWaterMeter = Model.buildingMeterDataList.Where(m => m.MeterType == IndependentStudy.Models.MeterType.Water).Count() > 0;
+
+
+
+
+}
+
+<script src="../Scripts/jquery-2.1.4.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        console.log("ready!");
+        buildGraph();
+    });
+    function buildGraph() {
+
+        var chart = new Highcharts.Chart({
+            chart: {
+                renderTo: 'container'
+            },
+            title: {
+                text: 'Resource Usage with respect to Air Temperature',
+                x: -20 //center
+            },
+            subtitle: {
+                text: '',
+                x: -20
+            },
+            xAxis: {
+                //categories
+                categories: @Html.Raw(categoryString),
+                crosshair: true
+            },
+            yAxis: [{ // Primary yAxis
+                title: {
+                    text: 'Temperature',
+                    style: {
+                        color: Highcharts.getOptions().colors[0]
+                    }
+                },
+                labels: {
+                    format: '{value}°F',
+                    style: {
+                        color: Highcharts.getOptions().colors[0]
+                    }
+                },
+                opposite: false
+
+            }, { // Secondary yAxis
+                gridLineWidth: 0,
+                title: {
+                    enabled: false,
+                    text: 'Electricity Usage',
+                    style: {
+                        color: Highcharts.getOptions().colors[3]
+                    }
+                },
+                labels: {
+                    format: '{value} kWh',
+                    style: {
+                        color: Highcharts.getOptions().colors[3]
+                    }
+                },
+                opposite: true
+
+            }, { // Tertiary yAxis
+                gridLineWidth: 0,
+                title: {
+                    enabled: false,
+                    text: 'Steam Usage',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
+                },
+                labels: {
+
+                    format: '{value} lbs',
+                    style: {
+                        color: Highcharts.getOptions().colors[1]
+                    }
+                },
+                opposite: true
+            }, { // Quatal yAxis
+                gridLineWidth: 0,
+                title: {
+                    enabled: false,
+                    text: 'Water Usage',
+                    style: {
+                        color: Highcharts.getOptions().colors[4]
+                    }
+                },
+                labels: {
+                    format: '{value},000 gal',
+                    style: {
+                        color: Highcharts.getOptions().colors[4]
+                    }
+                },
+                opposite: true
+            }],
+            tooltip: {
+                shared: true
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'left',
+                x: 80,
+                verticalAlign: 'top',
+                y: 55,
+                floating: true,
+            },
+            series: [
+
+                {
+                    name: 'Temperature',
+                    type: 'column',
+                    yAxis: 0,
+                    data: @Html.Raw(temperatureDataString),
+                    tooltip: {
+                        valueSuffix: ' °F'
+                    }
+
+                }
+            @{
+
+
+                if (displayElectricMeter)
+                {
+                    @Html.Raw(", {name: '"+ buildingNameString + " Electricity',type: 'spline',yAxis: 1,data: "+ electricityDataString + ",color: Highcharts.getOptions().colors[3],tooltip: {valueSuffix: ' kWh'}}")
+                    }
+
+
+                if (displaySteamMeter)
+                {
+                    @Html.Raw(", {name: '"+buildingNameString+" Steam',type: 'spline',yAxis: 2,data: " +steamDataString+",color: Highcharts.getOptions().colors[1],tooltip: {valueSuffix: ' lbs'}}")
+                }
+
+                if (displayWaterMeter)
+                {
+                    @Html.Raw(", {name: '"+ buildingNameString + " Water',type: 'spline',yAxis: 3,data: "+waterDataString+",color: Highcharts.getOptions().colors[4],tooltip: {valueSuffix: ',000 gal'}}")
+                }
+            }
+            ]
+        });
+    }
+</script>
+
+<h2>Generated Graph</h2>
+
+<script src="https://code.highcharts.com/stock/highstock.src.js"></script>
+<div id="container" style="min-width: 310px; height: 400px; margin: 0 auto"></div>

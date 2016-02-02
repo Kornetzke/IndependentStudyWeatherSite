@@ -1,0 +1,64 @@
+﻿@model IndependentStudy.WebPages.Models.DataRequest
+
+@{
+    ViewBag.Title = "Index";
+}
+
+
+
+<h2>Index</h2>
+
+@using (Html.BeginForm("GenerateGraph","Home")) 
+{
+    @Html.AntiForgeryToken()
+    
+    <div class="form-horizontal">
+        <h4>DataRequest</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            @Html.LabelFor(model => model.BuildingID, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.BuildingID, (SelectList)ViewBag.BuildingsDropDown)
+                @Html.ValidationMessageFor(model => model.BuildingID, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.MeterTypes, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.MeterTypes, (MultiSelectList)ViewBag.MetersDropDown, new { multiple = "multiple" })
+                @Html.ValidationMessageFor(model => model.MeterTypes, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.StartTime, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.StartTime, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.StartTime, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.EndTime, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.EndTime, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.EndTime, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <p>There currently doesn't look to be data before 1/1/2014 on campus resources, also water doesn't seem to be returning correctly</p>
+        <p>If the start date and end date are more than 4-5 months apart the historical temperature API times out</p>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="submit" class="btn btn-default" />
+            </div>
+        </div>
+    </div>
+}
+
+<div>
+    @Html.ActionLink("Back to List", "Index")
+</div>
